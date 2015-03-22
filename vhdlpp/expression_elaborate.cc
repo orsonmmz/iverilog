@@ -750,6 +750,33 @@ int ExpConditional::else_t::elaborate_expr(Entity*ent, ScopeBase*scope, const VT
       return errors;
 }
 
+const VType*ExpFunc::probe_type(Entity*ent, ScopeBase*scope) const
+{
+      if(name_ == "integer")
+          return &primitive_INTEGER;
+
+      if(name_ == "unsigned" || name_ == "resize") {
+          // TODO error checkingA
+          int msb = argv_[0]->probe_type(ent, scope)->get_width(scope) - 1;
+		  Expression*exp_msb = new ExpInteger(msb);
+		  Expression*exp_lsb = new ExpInteger(0);
+		  vector<VTypeArray::range_t> use_dims(1);
+		  use_dims[0] = VTypeArray::range_t(exp_msb, exp_lsb);
+                  // TODO add new constructor that takes two integers and element_type
+		  return new VTypeArray(&primitive_BIT, use_dims);
+      }
+
+      Subprogram*prog = scope->find_subprogram(name_);
+
+      if(!prog)
+            prog = library_find_subprogram(name_);
+
+      if(!prog)
+            return NULL;
+
+      return prog->peek_return_type();
+}
+
 int ExpFunc::elaborate_expr(Entity*ent, ScopeBase*scope, const VType*)
 {
       int errors = 0;
@@ -780,6 +807,55 @@ int ExpFunc::elaborate_expr(Entity*ent, ScopeBase*scope, const VType*)
       }
 
       return errors;
+}
+
+const VType* ExpFunc::fit_type(Entity*ent, ScopeBase*scope, const VTypeArray*) const
+{
+      // Built-in functions
+      if(name_ == "to_integer" || name_ == "unsigned" || name_ == "integer") {
+          ivl_assert(*this, argv_.size() == 1);
+          bool signed_flag = !(name_ == "unsigned");
+
+          vector<VTypeArray::range_t> range;
+          const VType*type = argv_[0]->probe_type(ent, scope);
+          ivl_assert(*this, type);
+
+          range.push_back(VTypeArray::range_t(new ExpInteger(type->get_width(scope)),
+                                              new ExpInteger(0)));
+          return new VTypeArray(&primitive_BIT, range, signed_flag);
+      }
+
+      if(name_ == "to_unsigned" || name_ == "std_logic_vector" ||
+         name_ == "conv_std_logic_vector" || name_ == "resize")
+      {
+          ivl_assert(*this, argv_.size() == 2);
+          bool signed_flag = !(name_ == "unsigned");
+
+          vector<VTypeArray::range_t> range;
+          int64_t width = 0;
+          bool evaluated = argv_[1]->evaluate(scope, width);
+          ivl_assert(*this, evaluated);
+
+          range.push_back(VTypeArray::range_t(new ExpInteger(width),
+                                              new ExpInteger(0)));
+
+          return new VTypeArray(&primitive_BIT, range, signed_flag);
+      }
+
+      // Other cases
+      Subprogram*prog = def_;
+
+      if(!prog) {
+          ivl_assert(*this, scope);
+          prog = scope->find_subprogram(name_);
+      }
+
+      if(!prog)
+          prog = library_find_subprogram(name_);
+
+      ivl_assert(*this, prog);
+
+      return def_->peek_return_type();
 }
 
 const VType* ExpInteger::probe_type(Entity*, ScopeBase*) const
