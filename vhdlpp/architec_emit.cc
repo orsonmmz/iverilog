@@ -83,6 +83,9 @@ int Architecture::emit(ostream&out, Entity*entity)
 		errors += def->emit_typedef(out, typedef_ctx);
       }
 
+      out << "localparam \\true = 1'b1;" << endl;
+      out << "localparam \\false = 1'b0;" << endl;
+
       for (map<perm_string,struct const_t*>::iterator cur = use_constants_.begin()
          ; cur != use_constants_.end() ; ++cur) {
 
