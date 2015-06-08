@@ -20,6 +20,7 @@
 # include  "vpi_config.h"
 # include  "vpi_user.h"
 # include  <assert.h>
+# include  <math.h>
 # include  "ivl_alloc.h"
 
 /*
@@ -41,10 +42,16 @@ static struct monitor_data **mdata = 0;
 static unsigned mdata_count = 0;
 
 typedef enum { EVENT = 0, RISING_EDGE = 1, FALLING_EDGE = 2 } event_type_t;
-static const char* func_names[] = {
+static const char* attr_func_names[] = {
       "$ivlh_attribute_event",
       "$ivlh_rising_edge",
       "$ivlh_falling_edge"
+};
+
+typedef enum { TO_DEF_UNITS = 0, FROM_DEF_UNITS = 1 } time_conv_t;
+static const char* time_conv_func_names[] = {
+      "$ivlh_time_to_def",
+      "$ivlh_time_from_def"
 };
 
 /* To keep valgrind happy free the allocated memory. */
@@ -93,7 +100,7 @@ static PLI_INT32 ivlh_attribute_event_compiletf(ICARUS_VPI_CONST PLI_BYTE8*data)
 	    vpi_printf("ERROR: %s:%d: ", vpi_get_str(vpiFile, sys),
 	               (int)vpi_get(vpiLineNo, sys));
 	    vpi_printf("(compiler error) %s requires a single argument.\n",
-	               func_names[type]);
+	               attr_func_names[type]);
 	    vpi_control(vpiFinish, 1);
 	    return 0;
       }
@@ -127,7 +134,7 @@ static PLI_INT32 ivlh_attribute_event_compiletf(ICARUS_VPI_CONST PLI_BYTE8*data)
 	    vpi_printf("ERROR: %s:%d: ", vpi_get_str(vpiFile, sys),
 	               (int)vpi_get(vpiLineNo, sys));
 	    vpi_printf("(compiler error) %s only takes a single argument.\n",
-	               func_names[type]);
+	               attr_func_names[type]);
 	    vpi_free_object(argv);
 	    vpi_control(vpiFinish, 1);
       }
@@ -180,6 +187,84 @@ static PLI_INT32 ivlh_attribute_event_sizetf(ICARUS_VPI_CONST PLI_BYTE8*type)
       return 1;
 }
 
+static PLI_INT32 ivlh_time_conv_compiletf(ICARUS_VPI_CONST PLI_BYTE8*data)
+{
+      time_conv_t direction = (time_conv_t) data;
+
+      vpiHandle callh = vpi_handle(vpiSysTfCall, 0);
+      vpiHandle argv;
+      vpiHandle arg;
+
+      argv = vpi_iterate(vpiArgument, callh);
+      if (argv == 0) {
+	    vpi_printf("ERROR: %s:%d: ", vpi_get_str(vpiFile, callh),
+	               (int)vpi_get(vpiLineNo, callh));
+	    vpi_printf("%s requires one time/real type argument.\n", time_conv_func_names[direction]);
+	    vpi_control(vpiFinish, 1);
+	    return 0;
+      }
+
+      arg =  vpi_scan(argv);
+      if (arg == 0) return 0;
+
+      arg = vpi_scan(argv);
+      if (arg != 0) {
+	    vpi_printf("ERROR: %s:%d: ", vpi_get_str(vpiFile, callh),
+	               (int)vpi_get(vpiLineNo, callh));
+	    vpi_printf("%s has too many arguments.\n", time_conv_func_names[direction]);
+	    vpi_control(vpiFinish, 1);
+	    return 0;
+      }
+
+      return 0;
+}
+
+static PLI_INT32 ivlh_time_conv_calltf(ICARUS_VPI_CONST PLI_BYTE8*data)
+{
+      time_conv_t direction = (time_conv_t) data;
+
+      vpiHandle callh = vpi_handle(vpiSysTfCall, 0);
+      vpiHandle argv, time_orig_arg, scope_orig;
+      PLI_INT32 units_sim, units_orig, units_diff;
+      s_vpi_value val;
+
+      // Get the argument value
+      argv = vpi_iterate(vpiArgument, callh);
+      assert(argv);
+      time_orig_arg = vpi_scan(argv);
+      assert(time_orig_arg);
+      vpi_free_object(argv);
+
+      val.format = vpiRealVal;      // time is stored as a real number
+      vpi_get_value(time_orig_arg, &val);
+
+      // Get time units
+      // units used by the simulator
+      units_sim = vpi_get(vpiTimeUnit, NULL);
+
+      // units used in the scope
+      scope_orig = vpi_handle(vpiScope, callh);
+      assert(scope_orig);
+      units_orig = vpi_get(vpiTimeUnit, scope_orig);
+
+      // difference of exponents
+      units_diff = units_orig - units_sim;
+
+      // Return scaled time
+      val.format = vpiRealVal;
+
+      if(direction == TO_DEF_UNITS)
+          val.value.real *= pow(10, units_diff);
+      else if(direction == FROM_DEF_UNITS)
+          val.value.real /= pow(10, units_diff);
+      else
+          assert(0);
+
+      vpi_put_value(callh, &val, 0, vpiNoDelay);
+
+      return 0;
+}
+
 static void vhdl_register(void)
 {
       s_vpi_systf_data tf_data;
@@ -191,7 +276,7 @@ static void vhdl_register(void)
       tf_data.calltf       = ivlh_attribute_event_calltf;
       tf_data.compiletf    = ivlh_attribute_event_compiletf;
       tf_data.sizetf       = ivlh_attribute_event_sizetf;
-      tf_data.tfname       = func_names[EVENT];
+      tf_data.tfname       = attr_func_names[EVENT];
       tf_data.user_data    = (PLI_BYTE8*) EVENT;
       res = vpi_register_systf(&tf_data);
       vpip_make_systf_system_defined(res);
@@ -201,7 +286,7 @@ static void vhdl_register(void)
       tf_data.calltf       = ivlh_attribute_event_calltf;
       tf_data.compiletf    = ivlh_attribute_event_compiletf;
       tf_data.sizetf       = ivlh_attribute_event_sizetf;
-      tf_data.tfname       = func_names[RISING_EDGE];
+      tf_data.tfname       = attr_func_names[RISING_EDGE];
       tf_data.user_data    = (PLI_BYTE8*) RISING_EDGE;
       res = vpi_register_systf(&tf_data);
       vpip_make_systf_system_defined(res);
@@ -211,8 +296,28 @@ static void vhdl_register(void)
       tf_data.calltf       = ivlh_attribute_event_calltf;
       tf_data.compiletf    = ivlh_attribute_event_compiletf;
       tf_data.sizetf       = ivlh_attribute_event_sizetf;
-      tf_data.tfname       = func_names[FALLING_EDGE];
+      tf_data.tfname       = attr_func_names[FALLING_EDGE];
       tf_data.user_data    = (PLI_BYTE8*) FALLING_EDGE;
+      res = vpi_register_systf(&tf_data);
+      vpip_make_systf_system_defined(res);
+
+      tf_data.type         = vpiSysFunc;
+      tf_data.sysfunctype  = vpiRealFunc;
+      tf_data.calltf       = ivlh_time_conv_calltf;
+      tf_data.compiletf    = ivlh_time_conv_compiletf;
+      tf_data.sizetf       = 0;
+      tf_data.tfname       = time_conv_func_names[TO_DEF_UNITS];
+      tf_data.user_data    = (PLI_BYTE8*) TO_DEF_UNITS;
+      res = vpi_register_systf(&tf_data);
+      vpip_make_systf_system_defined(res);
+
+      tf_data.type         = vpiSysFunc;
+      tf_data.sysfunctype  = vpiRealFunc;
+      tf_data.calltf       = ivlh_time_conv_calltf;
+      tf_data.compiletf    = ivlh_time_conv_compiletf;
+      tf_data.sizetf       = 0;
+      tf_data.tfname       = time_conv_func_names[FROM_DEF_UNITS];
+      tf_data.user_data    = (PLI_BYTE8*) FROM_DEF_UNITS;
       res = vpi_register_systf(&tf_data);
       vpip_make_systf_system_defined(res);
 

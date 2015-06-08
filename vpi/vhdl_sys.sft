@@ -1,3 +1,5 @@
 $ivlh_attribute_event	vpiSysFuncSized 1 unsigned
 $ivlh_rising_edge	vpiSysFuncSized 1 unsigned
 $ivlh_falling_edge	vpiSysFuncSized 1 unsigned
+$ivlh_time_to_def	vpiSysFuncReal 1
+$ivlh_time_from_def	vpiSysFuncReal 1
