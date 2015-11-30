@@ -79,7 +79,9 @@ VHDL_SYS = vhdl_table.o
 
 VPI_DEBUG = vpi_debug.o
 
-all: dep system.vpi va_math.vpi v2005_math.vpi v2009.vpi vhdl_sys.vpi vpi_debug.vpi $(ALL32)
+VPI_LINK = vpi_link.o
+
+all: dep system.vpi va_math.vpi v2005_math.vpi v2009.vpi vhdl_sys.vpi vpi_debug.vpi vpi_link.vpi $(ALL32)
 
 check: all
 
@@ -88,7 +90,8 @@ clean:
 	rm -f sdf_lexor.c sdf_parse.c sdf_parse.output sdf_parse.h
 	rm -f table_mod_parse.c table_mod_parse.h table_mod_parse.output
 	rm -f table_mod_lexor.c
-	rm -f va_math.vpi v2005_math.vpi v2009.vpi vhdl_sys.vpi vpi_debug.vpi
+	rm -f va_math.vpi v2005_math.vpi v2009.vpi vhdl_sys.vpi
+	rm -f vpi_debug.vpi vpi_link.vpi
 
 distclean: clean
 	rm -f Makefile config.log
@@ -166,6 +169,9 @@ vhdl_sys.vpi: $(VHDL_SYS) ../vvp/libvpi.a
 vpi_debug.vpi: $(VPI_DEBUG) ../vvp/libvpi.a
 	$(CC) @shared@ -o $@ $(VPI_DEBUG) -L../vvp $(LDFLAGS) -lvpi $(SYSTEM_VPI_LDFLAGS)
 
+vpi_link.vpi: $(VPI_LINK) ../vvp/libvpi.a
+	$(CC) @shared@ -o $@ $(VPI_LINK) -L../vvp $(LDFLAGS) -lvpi -lzmq $(SYSTEM_VPI_LDFLAGS)
+
 stamp-vpi_config-h: $(srcdir)/vpi_config.h.in ../config.status
 	@rm -f $@
 	cd ..; ./config.status --header=vpi/vpi_config.h
@@ -177,7 +183,7 @@ install: all installdirs \
     $(vpidir)/v2005_math.vpi $(vpidir)/v2005_math.sft \
     $(vpidir)/v2009.vpi $(vpidir)/v2009.sft \
     $(vpidir)/vhdl_sys.vpi $(vpidir)/vhdl_sys.sft \
-    $(vpidir)/vpi_debug.vpi
+    $(vpidir)/vpi_debug.vpi $(vpidir)/vpi_link.vpi
 
 $(vpidir)/system.vpi: ./system.vpi
 	$(INSTALL_PROGRAM) ./system.vpi "$(DESTDIR)$(vpidir)/system.vpi"
@@ -212,6 +218,9 @@ $(vpidir)/vhdl_sys.sft: vhdl_sys.sft
 $(vpidir)/vpi_debug.vpi: ./vpi_debug.vpi
 	$(INSTALL_PROGRAM) ./vpi_debug.vpi "$(DESTDIR)$(vpidir)/vpi_debug.vpi"
 
+$(vpidir)/vpi_link.vpi: ./vpi_link.vpi
+	$(INSTALL_PROGRAM) ./vpi_link.vpi "$(DESTDIR)$(vpidir)/vpi_link.vpi"
+
 installdirs: $(srcdir)/../mkinstalldirs
 	$(srcdir)/../mkinstalldirs "$(DESTDIR)$(libdir)" "$(DESTDIR)$(vpidir)"
 
@@ -227,6 +236,7 @@ uninstall:
 	rm -f "$(DESTDIR)$(vpidir)/vhdl_sys.vpi"
 	rm -f "$(DESTDIR)$(vpidir)/vhdl_sys.sft"
 	rm -f "$(DESTDIR)$(vpidir)/vpi_debug.vpi"
+	rm -f "$(DESTDIR)$(vpidir)/vpi_link.vpi"
 
 -include $(patsubst %.o, dep/%.d, $O)
 -include $(patsubst %.o, dep/%.d, $(OPP))

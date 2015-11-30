@@ -102,4 +102,20 @@ struct adding_term {
       Expression*term;
 };
 
+class file_open_info_t {
+    public:
+      file_open_info_t(ExpString*filename, ExpName*kind = NULL)
+        : kind_(kind), filename_(filename) {
+        if(!kind_) kind_ = new ExpName(perm_string::literal("read_mode"));
+      }
+      ~file_open_info_t() { delete kind_; delete filename_; }
+
+      ExpName*kind() { return kind_; }
+      ExpString*filename() { return filename_; }
+
+    private:
+      ExpName*kind_;
+      ExpString*filename_;
+};
+
 #endif /* IVL_parse_types_H */
