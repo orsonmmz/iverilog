@@ -46,7 +46,7 @@ ScopeBase::ScopeBase(const ActiveScope&ref)
     use_subprograms_(ref.use_subprograms_), cur_subprograms_(ref.cur_subprograms_),
     scopes_(ref.scopes_), use_enums_(ref.use_enums_),
     initializers_(ref.initializers_), finalizers_(ref.finalizers_),
-    name_(ref.name_)
+    package_header_(NULL), name_(ref.name_)
 {
 }
 
