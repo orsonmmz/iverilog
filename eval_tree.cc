@@ -710,10 +710,11 @@ NetEConst* NetEBComp::eval_eqeqeq_(bool ne_flag, const NetExpr*le, const NetExpr
 	    verinum::V pad = verinum::V0;
 	    if (is_signed) pad = lv.get(lv.len()-1);
 	    for (unsigned idx = cnt ;  idx < rv.len() ;  idx += 1) {
-		  if (rv.get(idx) != pad)
+		  if (rv.get(idx) != pad) {
 			res = verinum::V0;
 			break;
 		  }
+	    }
       }
 
       if (ne_flag) {
