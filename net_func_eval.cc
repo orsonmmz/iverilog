@@ -1018,7 +1018,7 @@ NetExpr* NetESignal::evaluate_function(const LineInfo&loc,
 NetExpr* NetETernary::evaluate_function(const LineInfo&loc,
 				map<perm_string,LocalVar>&context_map) const
 {
-      auto_ptr<NetExpr> cval (cond_->evaluate_function(loc, context_map));
+      unique_ptr<NetExpr> cval (cond_->evaluate_function(loc, context_map));
 
       switch (const_logical(cval.get())) {
 

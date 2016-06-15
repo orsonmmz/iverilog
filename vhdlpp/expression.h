@@ -273,8 +273,8 @@ class ExpAggregate : public Expression {
 	    void dump(ostream&out, int indent) const;
 
 	  private:
-	    std::auto_ptr<Expression>expr_;
-	    std::auto_ptr<ExpRange>  range_;
+	    std::unique_ptr<Expression>expr_;
+	    std::unique_ptr<ExpRange>  range_;
 	  private: // not implemented
 	    choice_t& operator= (const choice_t&);
       };
@@ -775,7 +775,7 @@ class ExpName : public Expression {
     private:
       Expression*index(unsigned int number) const;
 
-      std::auto_ptr<ExpName> prefix_;
+      std::unique_ptr<ExpName> prefix_;
       perm_string name_;
       std::list<Expression*>*indices_;
 };
