@@ -173,6 +173,20 @@ void preload_std_funcs(void)
                                            perm_string::literal("$unsigned"),
                                            args, &primitive_UNSIGNED));
 
+    /* function signed
+     */
+    args = new list<InterfacePort*>();
+    args->push_back(new InterfacePort(&primitive_INTEGER));
+    register_std_subprogram(new SubprogramBuiltin(perm_string::literal("signed"),
+                                           perm_string::literal("$signed"),
+                                           args, &primitive_SIGNED));
+
+    args = new list<InterfacePort*>();
+    args->push_back(new InterfacePort(&primitive_STDLOGIC_VECTOR));
+    register_std_subprogram(new SubprogramBuiltin(perm_string::literal("signed"),
+                                           perm_string::literal("$signed"),
+                                           args, &primitive_SIGNED));
+
     /* function integer
      */
     args = new list<InterfacePort*>();
@@ -317,6 +331,20 @@ void preload_std_funcs(void)
     register_std_subprogram(new SubprogramBuiltin(perm_string::literal("to_unsigned"),
                                            perm_string::literal("$ivlh_to_unsigned"),
                                            args, &primitive_UNSIGNED));
+
+    args = new list<InterfacePort*>();
+    args->push_back(new InterfacePort(&primitive_INTEGER));
+    args->push_back(new InterfacePort(&primitive_INTEGER));
+    register_std_subprogram(new SubprogramBuiltin(perm_string::literal("to_signed"),
+                                           perm_string::literal("$ivlh_to_signed"),
+                                           args, &primitive_SIGNED));
+
+    args = new list<InterfacePort*>();
+    args->push_back(new InterfacePort(&primitive_STDLOGIC_VECTOR));
+    args->push_back(new InterfacePort(&primitive_INTEGER));
+    register_std_subprogram(new SubprogramBuiltin(perm_string::literal("to_signed"),
+                                           perm_string::literal("$ivlh_to_signed"),
+                                           args, &primitive_SIGNED));
 
     /* procedure file_open (file f: text; filename: in string, file_open_kind: in mode);
      */

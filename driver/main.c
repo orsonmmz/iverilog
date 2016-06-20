@@ -309,7 +309,7 @@ static const char*my_tempfile(const char*str, FILE**fout)
 static int t_version_only(void)
 {
       int rc;
-      remove(source_path);
+      /*remove(source_path);*/
       free(source_path);
 
       fflush(0);
@@ -328,11 +328,11 @@ static int t_version_only(void)
       }
 
       if ( ! getenv("IVERILOG_ICONFIG")) {
-	    remove(iconfig_path);
+	    /*remove(iconfig_path);*/
 	    free(iconfig_path);
-	    remove(defines_path);
+	    /*remove(defines_path);*/
 	    free(defines_path);
-	    remove(compiled_defines_path);
+	    /*remove(compiled_defines_path);*/
 	    free(compiled_defines_path);
       }
 
@@ -370,15 +370,15 @@ static int t_preprocess_only(void)
 	    printf("preprocess: %s\n", cmd);
 
       rc = system(cmd);
-      remove(source_path);
+      /*remove(source_path);*/
       free(source_path);
 
       if ( ! getenv("IVERILOG_ICONFIG")) {
-	    remove(iconfig_path);
+	    /*remove(iconfig_path);*/
 	    free(iconfig_path);
-	    remove(defines_path);
+	    /*remove(defines_path);*/
 	    free(defines_path);
-	    remove(compiled_defines_path);
+	    /*remove(compiled_defines_path);*/
 	    free(compiled_defines_path);
       }
 
@@ -460,13 +460,13 @@ static int t_compile(void)
 
       rc = system(cmd);
       if ( ! getenv("IVERILOG_ICONFIG")) {
-	    remove(source_path);
+	    /*remove(source_path);*/
 	    free(source_path);
-	    remove(iconfig_path);
+	    /*remove(iconfig_path);*/
 	    free(iconfig_path);
-	    remove(defines_path);
+	    /*remove(defines_path);*/
 	    free(defines_path);
-	    remove(compiled_defines_path);
+	    /*remove(compiled_defines_path);*/
 	    free(compiled_defines_path);
       }
 #ifdef __MINGW32__  /* MinGW just returns the exit status, so return it! */
@@ -894,7 +894,7 @@ int main(int argc, char **argv)
 	    fprintf(stderr, "%s: Please check TMP or TMPDIR.\n", argv[0]);
 
 	    fclose(source_file);
-	    remove(source_path);
+	    /*remove(source_path);*/
 	    return 1;
       }
 
@@ -921,10 +921,10 @@ int main(int argc, char **argv)
 		    argv[0], iconfig_path);
 	    fprintf(stderr, "%s: Please check TMP or TMPDIR.\n", argv[0]);
 	    fclose(source_file);
-	    remove(source_path);
+	    /*remove(source_path);*/
 
 	    fclose(defines_file);
-	    remove(defines_path);
+	    /*remove(defines_path);*/
 	    return 1;
       }
 
@@ -1050,15 +1050,15 @@ int main(int argc, char **argv)
 		case '?':
 		default:
 		  fclose(source_file);
-		  remove(source_path);
+		  /*remove(source_path);*/
 		  free(source_path);
 		  fclose(defines_file);
-		  remove(defines_path);
+		  /*remove(defines_path);*/
 		  free(defines_path);
 		  fclose(iconfig_file);
-		  remove(iconfig_path);
+		  /*remove(iconfig_path);*/
 		  free(iconfig_path);
-		  remove(compiled_defines_path);
+		  /*remove(compiled_defines_path);*/
 		  free(compiled_defines_path);
 		  while( (command_filename = get_cmd_file()) ) {
 			free(command_filename);
