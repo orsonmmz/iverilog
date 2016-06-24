@@ -18,7 +18,7 @@
  *    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-# include  "vtype.h"
+# include  "std_types.h"
 
 bool VType::type_match(const VType*that) const
 {
@@ -81,6 +81,17 @@ bool VTypeArray::type_match(const VType*that) const
               return false;
 
           return true;
+      }
+
+      if(const VTypePrimitive*prim = dynamic_cast<const VTypePrimitive*>(that)) {
+          // TODO it is not always true, but works for many cases
+          VTypePrimitive::type_t that_type = prim->type();
+
+          if(that_type != VTypePrimitive::NATURAL && that_type != VTypePrimitive::INTEGER)
+              return false;
+
+          if(element_type() == &primitive_STDLOGIC)
+              return true;
       }
 
       return false;

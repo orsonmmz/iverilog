@@ -64,13 +64,16 @@ int Signal::emit(ostream&out, Entity*ent, ScopeBase*scope, bool initialize)
       errors += decl.emit(out, peek_name());
 
       const Expression*init_expr = peek_init_expr();
-      if (initialize && init_expr) {
-            /* Emit initialization value for wires as a weak assignment */
-            if(!decl.reg_flag && !type->type_match(&primitive_REAL))
-                out << ";" << endl << "/*init*/ assign (weak1, weak0) " << peek_name();
+        if(!decl.reg_flag && !type->type_match(&primitive_REAL))
+            out << ";" << endl << "/*init*/ assign (weak1, weak0) " << peek_name();
 
-            out << " = ";
-            init_expr->emit(out, ent, scope);
+        out << " = ";
+
+      if (initialize && init_expr) {
+        /* Emit initialization value for wires as a weak assignment */
+        init_expr->emit(out, ent, scope);
+      } else {
+        cout << "'bx";
       }
       out << ";" << endl;
       return errors;

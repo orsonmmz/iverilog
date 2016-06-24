@@ -71,25 +71,40 @@ class SubprogramSizeCast : public SubprogramStdHeader {
           ports_->push_back(new InterfacePort(&primitive_INTEGER));
       }
 
-      int emit_name(const std::vector<Expression*>&argv,
-                    std::ostream&out, Entity*ent, ScopeBase*scope) const {
-          int64_t use_size;
-          bool rc = argv[1]->evaluate(ent, scope, use_size);
-
-          if(!rc) {
-              cerr << get_fileline() << ": sorry: Could not evaluate the "
-                   << "expression size. Size casting impossible." << endl;
-              return 1;
-          }
-
-          out << use_size << "'";
+      int emit_name(const std::vector<Expression*>&,
+                    std::ostream&, Entity*, ScopeBase*) const {
           return 0;
       }
 
       int emit_args(const std::vector<Expression*>&argv,
                     std::ostream&out, Entity*ent, ScopeBase*scope) const {
+          int64_t new_size, old_size;
 
-          return argv[0]->emit(out, ent, scope);
+          const VType*type = argv[0]->probe_type(ent, scope);
+
+          if(!type) {
+              cerr << "error" << endl;
+              // TODO
+              return 1;
+          }
+
+          old_size = type->get_width(scope);
+
+          if(!argv[1]->evaluate(ent, scope, new_size)) {
+              cerr << get_fileline() << ": sorry: Could not evaluate the "
+                   << "expression size. Size casting impossible." << endl;
+              return 1;
+          }
+
+          // TODO signed
+          // TODO handle shrinking
+          bool res = true;
+
+          out << "{" << new_size - old_size << "'b0,";
+          res &= argv[0]->emit(out, ent, scope);
+          out << "}";
+
+          return res;
       }
 };
 

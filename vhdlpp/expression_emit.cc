@@ -635,7 +635,7 @@ int ExpFunc::emit(ostream&out, Entity*ent, ScopeBase*scope) const
 
 int ExpInteger::emit(ostream&out, Entity*, ScopeBase*) const
 {
-      out << "32'd" << value_;
+      out << value_;
       return 0;
 }
 
